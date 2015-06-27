@@ -1,0 +1,6 @@
+
+ 01 $2 34 56789abc
+  $1
+ (std.include, "./sub.hexript")
+def0
+//  vim: set ft=hexript fdm=manual ff=unix :

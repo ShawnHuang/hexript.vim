@@ -1,0 +1,191 @@
+*hexript.txt*	Write a hex easily, and it is a code writing on free-format.
+
+Version: 0.0
+Author : rbtnn <naru123456789@gmail.com>
+License: MIT license  {{{
+    Permission is hereby granted, free of charge, to any person obtaining
+    a copy of this software and associated documentation files (the
+    "Software"), to deal in the Software without restriction, including
+    without limitation the rights to use, copy, modify, merge, publish,
+    distribute, sublicense, and/or sell copies of the Software, and to
+    permit persons to whom the Software is furnished to do so, subject to
+    the following conditions:
+    The above copyright notice and this permission notice shall be included
+    in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+}}}
+
+CONTENTS					*hexript-contents*
+
+Requires		|hexript-requires|
+Grammar	                |hexript-grammar|
+Tuple      	        |hexript-tuple|
+Commands                |hexript-commands|
+QuickRun                |hexript-quickrun|
+Functions               |hexript-functions|
+
+==============================================================================
+REQUIRES			       			*hexript-requires*
+
+* xxd
+* https://github.com/Shougo/vimproc.git
+* https://github.com/thinca/vim-quickrun.git (Optional)
+* https://github.com/Shougo/vinarise.git (Optional)
+
+==============================================================================
+GRAMMAR 					*hexript-grammar*
+
+Fundamentally, The hexript is hexadecimal numbers are enumerated.
+White spaces, such as a space and a new-line, are disregarded.
+>
+    //Example. This is a sample code of hexript.
+    4865 6c6c 6f 0a // Hello
+    6865 7872 6970 74 // hexript
+<
+Please see "hexript.vim/sample/*.hexript".
+
+
+* Comment                                        *hexript-type-comment*
+
+The hexript treats from '//' to end of line as a comment.
+
+ * Numeric                                       *hexript-type-numeric*
+
+Numeric is a hexadecimal number of 2,4,8 figures.
+So the hexadecimal number of 3 figures do not recognize on hexript.
+
+* Reference                                      *hexript-type-reference*
+
+Reference is to point a hexadecimal number of Nth bytes in current code of hexript.
+It describe such as "$xxx", "xxx" is a hexadecimal number beginning 0.
+Following codes is same behavior.
+
+>
+    // use Reference
+    4865 6c $2 bc 6f $0 00 $c 0a686578
+<
+>
+    // resolve Reference
+    48 65 6c 6c bc 6f 48 00 78 0a 68 65 78
+<
+In following code case:
+>
+    48 $4 65 6c $1 bc
+<
+"$4" and "$1" are a circular reference. This is error.
+
+* String                                      *hexript-type-string*
+
+String is same as string on vim.
+
+* Tuple                                           *hexript-type-tuple*
+
+In fact, Tuple is Fuction. Some day, usage as a tuple may be improved.
+It describe such as "(Identifier,Any,...)".
+A tuple can have also an element of tuple.
+A tuple should be described in a line.
+So tuple's element does not have a new-line.
+
+* Any                                        *hexript-type-any*
+
+Any is one of Numeric, Reference, String or Tuple.
+
+* Identifier                                     *hexript-type-identifier*
+
+Identifier is function name.
+It describe such as /[a-zA-Z.]\+/.
+for example, std.include, std.id, ... etc.
+
+==============================================================================
+TUPLE 			                 	*hexript-tuple*
+
+* std.include : String -> [Any]
+>
+  (std.include,"./hoge.hexript")
+<
+* std.id : Any -> Any
+>
+  (std.id,90) "-> 90
+<
+==============================================================================
+COMMANDS 					*hexript-commands*
+
+* HexriptToBinaryFile {dest}
+
+This is to convert a current buffer to {dest}.
+{dest} is a filepath to save the result.
+>
+  :HexriptToBinaryFile hoge.bin
+<
+==============================================================================
+FUNCTIONS 					*hexript-functions*
+
+* hexript#file_to_dict(source)
+
+This is to convert {source} to dictionary for :VinariseScript2Hex command in vinarise.
+This dictionary is such as { "bytes" : [1,0x5a,...] }.
+
+* hexript#dict_to_file(dict,dest)
+
+This is to convert dictionary to {source} for :VinariseHex2Script command in vinarise.
+This dictionary is such as { "bytes" : [1,0x5a,...] }.
+
+* hexript#lines_to_binaryfile(lines,dest)
+
+This is to convert {lines} to {dest}.
+{dest} is a filepath to save the result.
+>
+    :call hexript#lines_to_binaryfile(
+      \   readfile(expand('~/source.hexript'))
+      \ , expand('~/dest.bin') )
+<
+* hexript#file_to_binaryfile(source,dest)
+
+This is to convert {source} to {dest}.
+{dest} is a filepath to save the result.
+This is almost same behavior of HexriptToBinaryFile.
+>
+    :call hexript#file_to_binaryfile(
+      \   expand('~/source.hexript')
+      \ , expand('~/dest.bin') )
+<
+* hexript#binaryfile_to_bytes(source)
+
+This is to convert {source} to list of byte.
+{source} is a binaryfile-path.
+>
+    :echo hexript#binaryfile_to_bytes(expand('~/dest.bin') )
+    [1,4,0xa,0xff]
+<
+* hexript#bytes_to_binaryfile(bytes,dest)
+
+This is to convert {bytes} to {dest}.
+{dest} is a filepath to save the result.
+>
+    :call hexript#bytes_to_binaryfile(
+      \   [0,1,2,3,4,5,6,7,8,9,0xa,0xb]
+      \ , expand('~/dest.bin') )
+<
+==============================================================================
+QUICKRUN 					*hexript-quickrun*
+
+Hexript improved "outputter/vinarise" in Quickrun.
+If filetype of Quickrun-source is "hexript", open it converted on Vinarise.
+Otherwise, open it on Vinarise.
+>
+    let g:quickrun_config = {
+    \   "hexript" : { "outputter" : "vinarise" }
+    \ }
+<
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:noet:fen:fdl=0:
+
+
+
